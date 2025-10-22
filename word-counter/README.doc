@@ -1,0 +1,15 @@
+## Useful commands
+
+```bash
+go build
+
+GOOS=windows go build
+
+echo "test test test" | ./word-counter
+
+cat main.go | ./word-counter
+
+cat main.go | ./word-counter -l
+
+go test -v
+```
