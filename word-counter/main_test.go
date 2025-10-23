@@ -2,6 +2,8 @@ package main
 
 import (
 	"bytes"
+	"io"
+	"os"
 	"testing"
 )
 
@@ -39,5 +41,43 @@ func TestCountBytes(t *testing.T) {
 
 	if res != exp {
 		t.Errorf("Expected %d, got %d instead. \n", exp, res)
+	}
+}
+
+func TestCountWithConflictingFlags(t *testing.T) {
+	b := bytes.NewBufferString("dummy input")
+
+	// Create a pipe to capture stderr
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("Failed to create pipe: %v", err)
+	}
+
+	// Replace os.Stderr with the writable end of the pipe
+	oldStderr := os.Stderr
+	os.Stderr = w
+
+	// Run the function under test
+	got := count(b, true, true)
+
+	// Close the writer and restore stderr
+	w.Close()
+	os.Stderr = oldStderr
+
+	// Read what was written to the pipe
+	var stderr bytes.Buffer
+	_, err = io.Copy(&stderr, r)
+	if err != nil {
+		t.Fatalf("Failed to read from pipe: %v", err)
+	}
+
+	// Assertions
+	if got != 0 {
+		t.Errorf("Expected return value 0 for conflicting flags, got %d", got)
+	}
+
+	want := "It's not allowed to use -l and -b flags at the same time."
+	if !bytes.Contains(stderr.Bytes(), []byte(want)) {
+		t.Errorf("Expected stderr to contain %q, got %q", want, stderr.String())
 	}
 }

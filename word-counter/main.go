@@ -14,15 +14,15 @@ func main() {
 	// "b" means that it counts the number of bytes
 	isCountingBytes := flag.Bool("b", false, "Count bytes")
 	flag.Parse()
-	if *isCountingBytes && *isCountingLines {
-		fmt.Fprintln(os.Stderr, "It's not allowed to use -l and -b flags at the same time.")
-		return
-	}
 
 	fmt.Println(count(os.Stdin, *isCountingLines, *isCountingBytes))
 }
 
 func count(r io.Reader, isCountingLines bool, isCountingBytes bool) int {
+	if isCountingBytes && isCountingLines {
+		fmt.Fprintln(os.Stderr, "It's not allowed to use -l and -b flags at the same time.")
+		return 0
+	}
 
 	if isCountingBytes {
 		data, err := io.ReadAll(r)
