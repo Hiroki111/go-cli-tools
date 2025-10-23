@@ -9,18 +9,32 @@ import (
 )
 
 func main() {
-	// "l" means that it counts lines. The default value is false, so the default behaviour is to count words.
-	lines := flag.Bool("l", false, "Count lines")
+	// "l" means that it counts lines
+	isCountingLines := flag.Bool("l", false, "Count lines")
+	// "b" means that it counts the number of bytes
+	isCountingBytes := flag.Bool("b", false, "Count bytes")
 	flag.Parse()
-	fmt.Println(count(os.Stdin, *lines))
+	if *isCountingBytes && *isCountingLines {
+		fmt.Fprintln(os.Stderr, "It's not allowed to use -l and -b flags at the same time.")
+		return
+	}
+
+	fmt.Println(count(os.Stdin, *isCountingLines, *isCountingBytes))
 }
 
-func count(r io.Reader, countLines bool) int {
-	scanner := bufio.NewScanner(r)
+func count(r io.Reader, isCountingLines bool, isCountingBytes bool) int {
 
-	// If the count lines flag is not set, it counts words so it defines
-	// the scanner split type to words (the default behaviour is to split by lines)
-	if !countLines {
+	if isCountingBytes {
+		data, err := io.ReadAll(r)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "Error reading input:", err)
+			return 0
+		}
+		return len(data)
+	}
+
+	scanner := bufio.NewScanner(r)
+	if !isCountingLines {
 		scanner.Split(bufio.ScanWords)
 	}
 
