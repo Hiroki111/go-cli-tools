@@ -25,7 +25,7 @@ func main() {
 		flag.PrintDefaults()
 	}
 
-	add := flag.Bool("add", false, "Add task to the ToDo list")
+	add := flag.Bool("add", false, "Add task to the ToDo list\ne.g.,\n./todo -add Including item from Args\necho \"This item comes from STDIN\" | ./todo -add")
 	list := flag.Bool("list", false, "List all tasks")
 	complete := flag.Int("complete", 0, "Item to be completed")
 
