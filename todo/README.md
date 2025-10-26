@@ -1,3 +1,7 @@
+# TODO list
+
+# Usage
+
 ```bash
 # Change the directory to /todo/cmd/todo
 go build
