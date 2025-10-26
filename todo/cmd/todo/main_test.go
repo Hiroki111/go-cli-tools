@@ -22,19 +22,25 @@ func TestMain(m *testing.M) {
 		binName += ".exe"
 	}
 
-	build := exec.Command("go", "build", "-o", binName)
+	tempDir := os.TempDir()
+	testBin := filepath.Join(tempDir, binName)
+	testFile := filepath.Join(tempDir, fileName)
+
+	build := exec.Command("go", "build", "-o", testBin)
 
 	if err := build.Run(); err != nil {
 		fmt.Fprintf(os.Stderr, "Cannot build tool %s: %s", binName, err)
 		os.Exit(1)
 	}
 
+	os.Setenv("TODO_FILENAME", testFile)
+
 	fmt.Print("Running tests...")
 	result := m.Run()
 
 	fmt.Println("Cleaning up...")
-	os.Remove(binName)
-	os.Remove(fileName)
+	os.Remove(testBin)
+	os.Remove(testFile)
 
 	os.Exit(result)
 }
@@ -42,12 +48,7 @@ func TestMain(m *testing.M) {
 func TestTodoCLI(t *testing.T) {
 	task := "test task number 1"
 
-	dir, err := os.Getwd()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	cmdPath := filepath.Join(dir, binName)
+	cmdPath := filepath.Join(os.TempDir(), binName)
 
 	t.Run("AddNewTask", func(t *testing.T) {
 		cmd := exec.Command(cmdPath, "-add", task)

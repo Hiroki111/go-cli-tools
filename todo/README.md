@@ -1,7 +1,5 @@
 # TODO list
 
-Attention: Running `go test` removes the executable and the default todo file.
-
 # Usage
 
 ```bash
