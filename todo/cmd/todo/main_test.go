@@ -47,7 +47,8 @@ func TestMain(m *testing.M) {
 
 func TestTodoCLI(t *testing.T) {
 	task := "test task number 1"
-
+	task2 := "test task number 2"
+	task3 := "test task number 3"
 	cmdPath := filepath.Join(os.TempDir(), binName)
 
 	t.Run("AddNewTask", func(t *testing.T) {
@@ -58,7 +59,6 @@ func TestTodoCLI(t *testing.T) {
 		}
 	})
 
-	task2 := "test task number 2"
 	t.Run("AddNewTaskFromSTDIN", func(t *testing.T) {
 		cmd := exec.Command(cmdPath, "-add")
 		cmdStdIn, err := cmd.StdinPipe()
@@ -89,24 +89,43 @@ func TestTodoCLI(t *testing.T) {
 
 	t.Run("CompleteTask", func(t *testing.T) {
 		// Add task
-		task3 := "This is new task"
 		cmd := exec.Command(cmdPath, "-add", task3)
 		out, err := cmd.CombinedOutput()
 		if err != nil {
-			t.Fatalf("Failed to add task: %v\nOutput:\n%s", err, out)
+			t.Fatalf("Failed to add a task: %v\nOutput:\n%s", err, out)
 		}
 
 		// Mark it complete
 		cmd = exec.Command(cmdPath, "-complete", "3")
 		out, err = cmd.CombinedOutput()
 		if err != nil {
-			t.Fatalf("Failed to complete task: %v\nOutput:\n%s", err, out)
+			t.Fatalf("Failed to complete a task: %v\nOutput:\n%s", err, out)
 		}
 
 		// Check incomplete list
 		expected := fmt.Sprintf(" 1: %s\n 2: %s\nX 3: %s\n", task, task2, task3)
 		cmd = exec.Command(cmdPath, "-list")
 		out, err = cmd.CombinedOutput()
+		if err != nil {
+			t.Fatalf("Failed to list tasks: %v\nOutput:\n%s", err, out)
+		}
+
+		if string(out) != expected {
+			t.Errorf("Expected incomplete list %q, got %q", expected, string(out))
+		}
+	})
+
+	t.Run("DeleteTask", func(t *testing.T) {
+		taskNumber := "1"
+		cmd := exec.Command(cmdPath, "-del", taskNumber)
+		if _, err := cmd.CombinedOutput(); err != nil {
+			t.Fatalf("Failed to delete a task: Task number %s", taskNumber)
+		}
+
+		// Check incomplete list
+		expected := fmt.Sprintf(" 1: %s\nX 2: %s\n", task2, task3)
+		cmd = exec.Command(cmdPath, "-list")
+		out, err := cmd.CombinedOutput()
 		if err != nil {
 			t.Fatalf("Failed to list tasks: %v\nOutput:\n%s", err, out)
 		}

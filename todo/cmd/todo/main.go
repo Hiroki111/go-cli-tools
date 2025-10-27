@@ -25,7 +25,8 @@ func main() {
 		flag.PrintDefaults()
 	}
 
-	add := flag.Bool("add", false, "Add task to the ToDo list\ne.g.,\n./todo -add Including item from Args\necho \"This item comes from STDIN\" | ./todo -add")
+	add := flag.Bool("add", false, "Add a task to the ToDo list\ne.g.,\n./todo -add Including item from Args\necho \"This item comes from STDIN\" | ./todo -add")
+	del := flag.Int("del", 0, "Delete a task")
 	list := flag.Bool("list", false, "List all tasks")
 	complete := flag.Int("complete", 0, "Item to be completed")
 
@@ -59,6 +60,15 @@ func main() {
 		}
 		l.Add(t)
 
+		if err := l.Save(todoFileName); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+	case *del > 0:
+		if err := l.Delete(*del); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
 		if err := l.Save(todoFileName); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
