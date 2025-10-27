@@ -10,10 +10,7 @@ import (
 	"testing"
 )
 
-var (
-	binName  = "todo"
-	fileName = ".todo.json"
-)
+var binName = "todo"
 
 func TestMain(m *testing.M) {
 	fmt.Println("Building tool...")
@@ -22,10 +19,7 @@ func TestMain(m *testing.M) {
 		binName += ".exe"
 	}
 
-	tempDir := os.TempDir()
-	testBin := filepath.Join(tempDir, binName)
-	testFile := filepath.Join(tempDir, fileName)
-
+	testBin := filepath.Join(os.TempDir(), binName)
 	build := exec.Command("go", "build", "-o", testBin)
 
 	if err := build.Run(); err != nil {
@@ -33,105 +27,116 @@ func TestMain(m *testing.M) {
 		os.Exit(1)
 	}
 
-	os.Setenv("TODO_FILENAME", testFile)
+	// Run tests
+	code := m.Run()
 
-	fmt.Print("Running tests...")
-	result := m.Run()
-
-	fmt.Println("Cleaning up...")
+	// Clean up
 	os.Remove(testBin)
-	os.Remove(testFile)
-
-	os.Exit(result)
+	os.Exit(code)
 }
 
 func TestTodoCLI(t *testing.T) {
-	task := "test task number 1"
-	task2 := "test task number 2"
-	task3 := "test task number 3"
 	cmdPath := filepath.Join(os.TempDir(), binName)
 
 	t.Run("AddNewTask", func(t *testing.T) {
+		t.Setenv("TODO_FILENAME", filepath.Join(t.TempDir(), ".todo.json"))
+
+		task := "test task number 1"
 		cmd := exec.Command(cmdPath, "-add", task)
 
 		if err := cmd.Run(); err != nil {
 			t.Fatal(err)
 		}
-	})
 
-	t.Run("AddNewTaskFromSTDIN", func(t *testing.T) {
-		cmd := exec.Command(cmdPath, "-add")
-		cmdStdIn, err := cmd.StdinPipe()
+		cmd = exec.Command(cmdPath, "-list")
+		out, err := cmd.CombinedOutput()
 		if err != nil {
 			t.Fatal(err)
 		}
-		io.WriteString(cmdStdIn, task2)
-		cmdStdIn.Close()
+
+		expected := fmt.Sprintf(" 1: %s\n", task)
+		if string(out) != expected {
+			t.Errorf("Expected %q, got %q", expected, string(out))
+		}
+	})
+
+	t.Run("AddNewTaskFromSTDIN", func(t *testing.T) {
+		t.Setenv("TODO_FILENAME", filepath.Join(t.TempDir(), ".todo.json"))
+
+		task := "task from stdin"
+		cmd := exec.Command(cmdPath, "-add")
+		stdin, err := cmd.StdinPipe()
+		if err != nil {
+			t.Fatal(err)
+		}
+		io.WriteString(stdin, task)
+		stdin.Close()
 
 		if err := cmd.Run(); err != nil {
 			t.Fatal(err)
 		}
-	})
 
-	t.Run("ListTasks", func(t *testing.T) {
-		cmd := exec.Command(cmdPath, "-list")
+		cmd = exec.Command(cmdPath, "-list")
 		out, err := cmd.CombinedOutput()
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		expected := fmt.Sprintf(" 1: %s\n 2: %s\n", task, task2)
-
-		if expected != string(out) {
-			t.Errorf("Expected %q, got %q instead\n", expected, string(out))
+		expected := fmt.Sprintf(" 1: %s\n", task)
+		if string(out) != expected {
+			t.Errorf("Expected %q, got %q", expected, string(out))
 		}
 	})
 
 	t.Run("CompleteTask", func(t *testing.T) {
-		// Add task
-		cmd := exec.Command(cmdPath, "-add", task3)
+		t.Setenv("TODO_FILENAME", filepath.Join(t.TempDir(), ".todo.json"))
+
+		task := "complete me"
+		cmd := exec.Command(cmdPath, "-add", task)
+		if err := cmd.Run(); err != nil {
+			t.Fatal(err)
+		}
+
+		cmd = exec.Command(cmdPath, "-complete", "1")
+		if err := cmd.Run(); err != nil {
+			t.Fatal(err)
+		}
+
+		cmd = exec.Command(cmdPath, "-list")
 		out, err := cmd.CombinedOutput()
 		if err != nil {
-			t.Fatalf("Failed to add a task: %v\nOutput:\n%s", err, out)
+			t.Fatal(err)
 		}
 
-		// Mark it complete
-		cmd = exec.Command(cmdPath, "-complete", "3")
-		out, err = cmd.CombinedOutput()
-		if err != nil {
-			t.Fatalf("Failed to complete a task: %v\nOutput:\n%s", err, out)
-		}
-
-		// Check incomplete list
-		expected := fmt.Sprintf(" 1: %s\n 2: %s\nX 3: %s\n", task, task2, task3)
-		cmd = exec.Command(cmdPath, "-list")
-		out, err = cmd.CombinedOutput()
-		if err != nil {
-			t.Fatalf("Failed to list tasks: %v\nOutput:\n%s", err, out)
-		}
-
+		expected := fmt.Sprintf("X 1: %s\n", task)
 		if string(out) != expected {
-			t.Errorf("Expected incomplete list %q, got %q", expected, string(out))
+			t.Errorf("Expected %q, got %q", expected, string(out))
 		}
 	})
 
 	t.Run("DeleteTask", func(t *testing.T) {
-		taskNumber := "1"
-		cmd := exec.Command(cmdPath, "-del", taskNumber)
-		if _, err := cmd.CombinedOutput(); err != nil {
-			t.Fatalf("Failed to delete a task: Task number %s", taskNumber)
+		t.Setenv("TODO_FILENAME", filepath.Join(t.TempDir(), ".todo.json"))
+
+		task1 := "task one"
+		task2 := "task two"
+		exec.Command(cmdPath, "-add", task1).Run()
+		exec.Command(cmdPath, "-add", task2).Run()
+
+		// Delete the first task
+		cmd := exec.Command(cmdPath, "-del", "1")
+		if err := cmd.Run(); err != nil {
+			t.Fatal(err)
 		}
 
-		// Check incomplete list
-		expected := fmt.Sprintf(" 1: %s\nX 2: %s\n", task2, task3)
 		cmd = exec.Command(cmdPath, "-list")
 		out, err := cmd.CombinedOutput()
 		if err != nil {
-			t.Fatalf("Failed to list tasks: %v\nOutput:\n%s", err, out)
+			t.Fatal(err)
 		}
 
+		expected := fmt.Sprintf(" 1: %s\n", task2)
 		if string(out) != expected {
-			t.Errorf("Expected incomplete list %q, got %q", expected, string(out))
+			t.Errorf("Expected %q, got %q", expected, string(out))
 		}
 	})
 }
