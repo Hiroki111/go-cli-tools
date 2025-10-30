@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/microcosm-cc/bluemonday"
@@ -33,13 +34,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := run(*fileName); err != nil {
+	if err := run(*fileName, os.Stdout); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }
 
-func run(fileName string) error {
+func run(fileName string, out io.Writer) error {
 	input, err := os.ReadFile(fileName)
 	if err != nil {
 		return err
@@ -57,7 +58,7 @@ func run(fileName string) error {
 	}
 
 	outName := temp.Name()
-	fmt.Println(outName)
+	fmt.Fprintln(out, outName)
 
 	return saveHTML(outName, htmlData)
 }
