@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
+	"runtime"
 
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday/v2"
@@ -27,6 +29,7 @@ const (
 
 func main() {
 	fileName := flag.String("file", "", "Markdown file to preview")
+	skipPreview := flag.Bool("s", false, "Skip auto-preview")
 	flag.Parse()
 
 	if *fileName == "" {
@@ -34,13 +37,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := run(*fileName, os.Stdout); err != nil {
+	if err := run(*fileName, os.Stdout, *skipPreview); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }
 
-func run(fileName string, out io.Writer) error {
+func run(fileName string, out io.Writer, skipPreview bool) error {
 	input, err := os.ReadFile(fileName)
 	if err != nil {
 		return err
@@ -60,7 +63,15 @@ func run(fileName string, out io.Writer) error {
 	outName := temp.Name()
 	fmt.Fprintln(out, outName)
 
-	return saveHTML(outName, htmlData)
+	if err := saveHTML(outName, htmlData); err != nil {
+		return err
+	}
+
+	if skipPreview {
+		return nil
+	}
+
+	return preview(outName)
 }
 
 func parseContent(input []byte) []byte {
@@ -77,4 +88,31 @@ func parseContent(input []byte) []byte {
 
 func saveHTML(outputFileName string, data []byte) error {
 	return os.WriteFile(outputFileName, data, 0644)
+}
+
+func preview(fileName string) error {
+	commandName := ""
+	commandParams := []string{}
+
+	switch runtime.GOOS {
+	case "linux":
+		commandName = "xdg-open"
+	case "windows":
+		commandName = "cmd.exe"
+		commandParams = []string{"/C", "start"}
+	case "darwin":
+		commandName = "open"
+	default:
+		return fmt.Errorf("OS not supported")
+	}
+
+	commandParams = append(commandParams, fileName)
+
+	commandPath, err := exec.LookPath(commandName)
+
+	if err != nil {
+		return err
+	}
+
+	return exec.Command(commandPath, commandParams...).Run()
 }
