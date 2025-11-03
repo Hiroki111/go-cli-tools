@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"time"
 
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday/v2"
@@ -71,6 +72,8 @@ func run(fileName string, out io.Writer, skipPreview bool) error {
 		return nil
 	}
 
+	defer os.Remove(outName)
+
 	return preview(outName)
 }
 
@@ -109,10 +112,12 @@ func preview(fileName string) error {
 	commandParams = append(commandParams, fileName)
 
 	commandPath, err := exec.LookPath(commandName)
-
 	if err != nil {
 		return err
 	}
 
-	return exec.Command(commandPath, commandParams...).Run()
+	err = exec.Command(commandPath, commandParams...).Run()
+
+	time.Sleep(2 * time.Second)
+	return err
 }
