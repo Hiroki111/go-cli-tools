@@ -51,36 +51,36 @@ func TestRun(t *testing.T) {
 
 func TestRunDelExtension(t *testing.T) {
 	testCases := []struct {
-		name        string
-		cfg         config
-		extNoDelete string
-		nDelete     int
-		nNoDelete   int
-		expected    string
+		name               string
+		cfg                config
+		extToKeep          string
+		numOfFilesToDelete int
+		numOfFilesToKeep   int
+		expected           string
 	}{
 		{
-			name:        "DeleteExtensionNoMatch",
-			cfg:         config{ext: ".log", del: true},
-			extNoDelete: ".gz",
-			nDelete:     0,
-			nNoDelete:   10,
-			expected:    "",
+			name:               "DeleteExtensionNoMatch",
+			cfg:                config{ext: ".log", del: true},
+			extToKeep:          ".gz",
+			numOfFilesToDelete: 0,
+			numOfFilesToKeep:   10,
+			expected:           "",
 		},
 		{
-			name:        "DeleteExtensionMatch",
-			cfg:         config{ext: ".log", del: true},
-			extNoDelete: "",
-			nDelete:     10,
-			nNoDelete:   0,
-			expected:    "",
+			name:               "DeleteExtensionMatch",
+			cfg:                config{ext: ".log", del: true},
+			extToKeep:          "",
+			numOfFilesToDelete: 10,
+			numOfFilesToKeep:   0,
+			expected:           "",
 		},
 		{
-			name:        "DeleteExtensionMixed",
-			cfg:         config{ext: ".log", del: true},
-			extNoDelete: ".gz",
-			nDelete:     5,
-			nNoDelete:   5,
-			expected:    "",
+			name:               "DeleteExtensionMixed",
+			cfg:                config{ext: ".log", del: true},
+			extToKeep:          ".gz",
+			numOfFilesToDelete: 5,
+			numOfFilesToKeep:   5,
+			expected:           "",
 		},
 	}
 
@@ -89,8 +89,8 @@ func TestRunDelExtension(t *testing.T) {
 			var buffer bytes.Buffer
 
 			tempDir, cleanup := createTempDir(t, map[string]int{
-				testCase.cfg.ext:     testCase.nDelete,
-				testCase.extNoDelete: testCase.nNoDelete,
+				testCase.cfg.ext:   testCase.numOfFilesToDelete,
+				testCase.extToKeep: testCase.numOfFilesToKeep,
 			})
 			defer cleanup()
 
@@ -109,8 +109,8 @@ func TestRunDelExtension(t *testing.T) {
 				t.Error(err)
 			}
 
-			if len(filesLeft) != testCase.nNoDelete {
-				t.Errorf("Expected %d files left, got %d instead\n", testCase.nNoDelete, len(filesLeft))
+			if len(filesLeft) != testCase.numOfFilesToKeep {
+				t.Errorf("Expected %d files left, got %d instead\n", testCase.numOfFilesToKeep, len(filesLeft))
 			}
 		})
 	}
