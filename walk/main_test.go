@@ -171,7 +171,7 @@ func TestRunArchive(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			pattern := filepath.Join(tempDir, fmt.Sprintf("%s", testCase.cfg.ext))
+			pattern := filepath.Join(tempDir, fmt.Sprintf("*%s", testCase.cfg.ext))
 			expectedFiles, err := filepath.Glob(pattern)
 			if err != nil {
 				t.Fatal(err)

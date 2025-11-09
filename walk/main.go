@@ -24,7 +24,7 @@ func main() {
 	list := flag.Bool("list", false, "List files only")
 	archive := flag.String("archive", "", "Archive directory")
 	del := flag.Bool("del", false, "Delete files")
-	ext := flag.String("ext", "", "File extensions to filter out")
+	ext := flag.String("ext", "", "File extension to filter out")
 	size := flag.Int64("size", 0, "Minimum file size")
 	flag.Parse()
 
@@ -52,7 +52,7 @@ func main() {
 	}
 
 	if err := run(*root, os.Stdout, c); err != nil {
-		fmt.Fprintln(os.Stdout, err)
+		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }
@@ -77,7 +77,6 @@ func run(root string, out io.Writer, cfg config) error {
 				if err := archiveFile(cfg.archive, root, path); err != nil {
 					return err
 				}
-				return nil
 			}
 
 			if cfg.del {
