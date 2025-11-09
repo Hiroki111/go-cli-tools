@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -122,6 +123,74 @@ func TestRunDelExtension(t *testing.T) {
 			lines := bytes.Split(logBuffer.Bytes(), []byte("\n"))
 			if len(lines) != expectedLogLines {
 				t.Errorf("Expected %d log lines, got %d instead\n", expectedLogLines, len(lines))
+			}
+		})
+	}
+}
+
+func TestRunArchive(t *testing.T) {
+	testCases := []struct {
+		name                  string
+		cfg                   config
+		extNotToArchive       string
+		numOfArchivedFiles    int
+		numOfNonArchivedFiles int
+	}{
+		{
+			name:            "ArchiveExtensionNoMatch",
+			cfg:             config{ext: ".log"},
+			extNotToArchive: ".gz", numOfArchivedFiles: 0, numOfNonArchivedFiles: 10,
+		},
+		{
+			name:            "ArchiveExtensionMatch",
+			cfg:             config{ext: ".log"},
+			extNotToArchive: "", numOfArchivedFiles: 10, numOfNonArchivedFiles: 0,
+		},
+		{
+			name:            "ArchiveExtensionMixed",
+			cfg:             config{ext: ".log"},
+			extNotToArchive: ".gz", numOfArchivedFiles: 5, numOfNonArchivedFiles: 5,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			var buffer bytes.Buffer
+
+			tempDir, cleanup := createTempDir(t, map[string]int{
+				testCase.cfg.ext:         testCase.numOfArchivedFiles,
+				testCase.extNotToArchive: testCase.numOfNonArchivedFiles,
+			})
+			defer cleanup()
+
+			archiveDir, cleanupArchive := createTempDir(t, nil)
+			defer cleanupArchive()
+
+			testCase.cfg.archive = archiveDir
+			if err := run(tempDir, &buffer, testCase.cfg); err != nil {
+				t.Fatal(err)
+			}
+
+			pattern := filepath.Join(tempDir, fmt.Sprintf("%s", testCase.cfg.ext))
+			expectedFiles, err := filepath.Glob(pattern)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			expectedOutput := strings.Join(expectedFiles, "\n")
+
+			res := strings.TrimSpace(buffer.String())
+			if expectedOutput != res {
+				t.Errorf("Expected %q, got %q instead\n", expectedOutput, res)
+			}
+
+			filesArchived, err := os.ReadDir(archiveDir)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if len(filesArchived) != testCase.numOfArchivedFiles {
+				t.Errorf("Expected %d files, archived, got %d instead\n", testCase.numOfArchivedFiles, len(filesArchived))
 			}
 		})
 	}
