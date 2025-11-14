@@ -36,4 +36,10 @@ go tool pprof -alloc_space mem00.pprof
 
 # `-benchmem` displays the memory allocation.
 go test -bench . -benchtime=10x -run ^$ -benchmem | tee benchresults00m.txt
+
+# `-trace trace01.out` creates a tracer file called trace01.out
+go test -bench . -benchtime=10x -run ^$ -trace trace01.out
+
+# `go tool trace` parses the contents of the trace file and makes the results avilable on a web browser.
+go tool trace trace01.out
 ```

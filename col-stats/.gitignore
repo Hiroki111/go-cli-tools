@@ -3,5 +3,5 @@ col-stats.test
 
 mem*.pprof
 cpu*.pprof
-
-benchresults00m.txt
+trace*.out
+benchresults*.txt
