@@ -1,7 +1,7 @@
 col-stats
 col-stats.test
 
-mem00.pprof
-cpu00.pprof
+mem*.pprof
+cpu*.pprof
 
 benchresults00m.txt
