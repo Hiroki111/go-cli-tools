@@ -5,6 +5,18 @@ It reads CSV files and executes the following operations:
 - sum: It calculates the sum of all values in the specified column.
 - avg: It determines the average value of the specified column.
 
+## Example usage
+
+```bash
+go build
+
+./col-stats -op avg -col 2 testdata/benchmark/*.csv
+
+./col-stats -op sum -col 2 testdata/benchmark/*.csv
+```
+
+## Benchmarking
+
 ```bash
 # Bench marking. `-run ^$` is to skip running any of the tests in the test file while executing the benchmark to prevent impacting the results.
 go test -bench . -run ^$
