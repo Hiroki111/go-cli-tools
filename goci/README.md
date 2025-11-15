@@ -1,0 +1,9 @@
+# goci
+
+Continuous Integration tool for Go programs.
+
+- Building the program using `go build` to verify if the program structure is valid.
+- Executing tests using `go test` to ensure the program does what it’s intended to do.
+- Executing `gofmt` to ensure the program’s format conforms to the standards.
+- Executing `git push` to push the code to the remote shared Git repository that hosts the program code.
+
