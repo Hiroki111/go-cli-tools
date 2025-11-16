@@ -16,7 +16,7 @@ func TestRun(t *testing.T) {
 		{
 			name:        "success",
 			project:     "./testdata/tool",
-			out:         "Go Build: SUCCESS\nGo Test: SUCCESS\n",
+			out:         "Go Build: SUCCESS\nGo Test: SUCCESS\nGofmt: SUCCESS\n",
 			expectedErr: nil,
 		},
 		{
@@ -24,6 +24,12 @@ func TestRun(t *testing.T) {
 			project:     "./testdata/toolErr",
 			out:         "",
 			expectedErr: &stepErr{step: "go build"},
+		},
+		{
+			name:        "failFormat",
+			project:     "./testdata/toolFmtErr",
+			out:         "",
+			expectedErr: &stepErr{step: "go fmt"},
 		},
 	}
 
