@@ -5,9 +5,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path/filepath"
+	"syscall"
 	"testing"
 	"time"
 )
@@ -105,6 +108,82 @@ func TestRun(t *testing.T) {
 	}
 }
 
+func TestRunKill(t *testing.T) {
+	var testCases = []struct {
+		name        string
+		project     string
+		signal      syscall.Signal
+		expectedErr error
+	}{
+		{"SIGINT", "./testdata/tool", syscall.SIGINT, ErrSignal},
+		{"SIGTERM", "./testdata/tool", syscall.SIGTERM, ErrSignal},
+		{"SIGQUIT", "./testdata/tool", syscall.SIGQUIT, nil},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			command = mockCmdTimeout
+		})
+
+		errCh := make(chan error)
+		irrelevantSignalCh := make(chan os.Signal, 1)
+		expectedSignalCh := make(chan os.Signal, 1)
+
+		signal.Notify(irrelevantSignalCh, syscall.SIGQUIT)
+		defer signal.Stop(irrelevantSignalCh)
+
+		signal.Notify(expectedSignalCh, testCase.signal)
+		defer signal.Stop(expectedSignalCh)
+
+		go func() {
+			errCh <- run(testCase.project, io.Discard)
+		}()
+		go func() {
+			time.Sleep(2 * time.Second)
+			syscall.Kill(syscall.Getpid(), testCase.signal)
+		}()
+
+		select {
+		case err := <-errCh:
+			if err == nil {
+				t.Errorf("Expected error. Got 'nil' instead.")
+				return
+			}
+
+			if !errors.Is(err, testCase.expectedErr) {
+				t.Errorf("Expected error: %q, got %q", testCase.expectedErr, err)
+			}
+
+			select {
+			case receivedSignal := <-expectedSignalCh:
+				if receivedSignal != testCase.signal {
+					t.Errorf("Expected signal %q, got %q", testCase.signal, receivedSignal)
+				}
+			default:
+				t.Errorf("Signal not received")
+			}
+		case <-irrelevantSignalCh:
+		}
+	}
+}
+
+func TestHelperProcess(t *testing.T) {
+	if os.Getenv("GO_WANT_HELPER_PROCESS") != "1" {
+		return
+	}
+
+	if os.Getenv("GO_HELPER_TIMEOUT") == "1" {
+		time.Sleep(15 * time.Second)
+	}
+
+	if os.Args[2] == "git" {
+		fmt.Fprintln(os.Stdout, "Everything up-to-date")
+		os.Exit(0)
+	}
+
+	os.Exit(1)
+}
+
 func setupGit(t *testing.T, project string) func() {
 	t.Helper()
 
@@ -176,21 +255,4 @@ func mockCmdTimeout(ctx context.Context, exe string, args ...string) *exec.Cmd {
 	cmd := mockCmdContext(ctx, exe, args...)
 	cmd.Env = append(cmd.Env, "GO_HELPER_TIMEOUT=1")
 	return cmd
-}
-
-func TestHelperProcess(t *testing.T) {
-	if os.Getenv("GO_WANT_HELPER_PROCESS") != "1" {
-		return
-	}
-
-	if os.Getenv("GO_HELPER_TIMEOUT") == "1" {
-		time.Sleep(15 * time.Second)
-	}
-
-	if os.Args[2] == "git" {
-		fmt.Fprintln(os.Stdout, "Everything up-to-date")
-		os.Exit(0)
-	}
-
-	os.Exit(1)
 }
