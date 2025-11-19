@@ -27,7 +27,7 @@ func TestRun(t *testing.T) {
 		{
 			name:        "success",
 			project:     "./testdata/tool",
-			out:         "Go Build: SUCCESS\nGolangci-lint: SUCCESS\nGo Test: SUCCESS\nGofmt: SUCCESS\nGit Push: SUCCESS\n",
+			out:         "Go Build: SUCCESS\nGolangci-lint: SUCCESS\nGocyclo: SUCCESS\nGo Test: SUCCESS\nGofmt: SUCCESS\nGit Push: SUCCESS\n",
 			expectedErr: nil,
 			setupGit:    true,
 			mockCmd:     nil,
@@ -35,7 +35,7 @@ func TestRun(t *testing.T) {
 		{
 			name:        "successMock",
 			project:     "./testdata/tool",
-			out:         "Go Build: SUCCESS\nGolangci-lint: SUCCESS\nGo Test: SUCCESS\nGofmt: SUCCESS\nGit Push: SUCCESS\n",
+			out:         "Go Build: SUCCESS\nGolangci-lint: SUCCESS\nGocyclo: SUCCESS\nGo Test: SUCCESS\nGofmt: SUCCESS\nGit Push: SUCCESS\n",
 			expectedErr: nil,
 			setupGit:    false,
 			mockCmd:     mockCmdContext,

@@ -9,7 +9,10 @@ Continuous Integration tool for Go programs.
 
 ## Pre-requisite
 
-Install (golangci-lint)[https://golangci-lint.run/docs/welcome/install/].
+Install the following:
+
+- [golangci-lint](https://golangci-lint.run/docs/welcome/install/)
+- [gocyclo](https://github.com/fzipp/gocyclo)
 
 ## Example usage
 

@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 )
@@ -29,7 +30,8 @@ func run(project string, out io.Writer) error {
 		return fmt.Errorf("project directory is required: %w", ErrValidation)
 	}
 
-	pipeline := make([]executer, 5)
+	gocycloUpperLimit := 20
+	pipeline := make([]executer, 6)
 	pipeline[0] = newStep(
 		"go build",
 		"go",
@@ -45,20 +47,27 @@ func run(project string, out io.Writer) error {
 		[]string{"run"},
 	)
 	pipeline[2] = newStep(
+		fmt.Sprintf("gocyclo -over %d", gocycloUpperLimit),
+		"gocyclo",
+		"Gocyclo: SUCCESS",
+		project,
+		[]string{"-over", strconv.Itoa(gocycloUpperLimit), "."},
+	)
+	pipeline[3] = newStep(
 		"go test",
 		"go",
 		"Go Test: SUCCESS",
 		project,
 		[]string{"test", "-v"},
 	)
-	pipeline[3] = newExceptionStep(
+	pipeline[4] = newExceptionStep(
 		"go fmt",
 		"gofmt",
 		"Gofmt: SUCCESS",
 		project,
 		[]string{"-l", "."},
 	)
-	pipeline[4] = newTimeoutStep(
+	pipeline[5] = newTimeoutStep(
 		"git push",
 		"git",
 		"Git Push: SUCCESS",
