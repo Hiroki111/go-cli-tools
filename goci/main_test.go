@@ -65,6 +65,7 @@ func TestRun(t *testing.T) {
 			mockCmd:     mockCmdTimeout,
 		},
 	}
+	var branch = "master"
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -82,7 +83,7 @@ func TestRun(t *testing.T) {
 			}
 
 			var out bytes.Buffer
-			err := run(testCase.project, &out)
+			err := run(testCase.project, branch, &out)
 
 			if testCase.expectedErr != nil {
 				if err == nil {
@@ -119,6 +120,7 @@ func TestRunKill(t *testing.T) {
 		{"SIGTERM", "./testdata/tool", syscall.SIGTERM, ErrSignal},
 		{"SIGQUIT", "./testdata/tool", syscall.SIGQUIT, nil},
 	}
+	var branch = "master"
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -136,7 +138,7 @@ func TestRunKill(t *testing.T) {
 		defer signal.Stop(expectedSignalCh)
 
 		go func() {
-			errCh <- run(testCase.project, io.Discard)
+			errCh <- run(testCase.project, branch, io.Discard)
 		}()
 		go func() {
 			time.Sleep(2 * time.Second)

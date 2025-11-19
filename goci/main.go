@@ -17,17 +17,21 @@ type executer interface {
 
 func main() {
 	project := flag.String("p", "", "Project directory")
+	branch := flag.String("b", "", "Branch name to push into")
 	flag.Parse()
 
-	if err := run(*project, os.Stdout); err != nil {
+	if err := run(*project, *branch, os.Stdout); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }
 
-func run(project string, out io.Writer) error {
+func run(project string, branch string, out io.Writer) error {
 	if project == "" {
 		return fmt.Errorf("project directory is required: %w", ErrValidation)
+	}
+	if branch == "" {
+		return fmt.Errorf("branch name is required: %w", ErrValidation)
 	}
 
 	gocycloUpperLimit := 20
@@ -72,7 +76,7 @@ func run(project string, out io.Writer) error {
 		"git",
 		"Git Push: SUCCESS",
 		project,
-		[]string{"push", "origin", "master"},
+		[]string{"push", "origin", branch},
 		10*time.Second,
 	)
 	signalCh := make(chan os.Signal, 1)

@@ -19,5 +19,5 @@ Install the following:
 ```bash
 go build
 
-./goci -p <path-to-a-go-project>
+./goci -p <path-to-a-go-project> -b <branch-name>
 ```
