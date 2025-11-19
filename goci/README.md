@@ -7,3 +7,14 @@ Continuous Integration tool for Go programs.
 - Executing `gofmt` to ensure the program’s format conforms to the standards.
 - Executing `git push` to push the code to the remote shared Git repository that hosts the program code.
 
+## Pre-requisite
+
+Install (golangci-lint)[https://golangci-lint.run/docs/welcome/install/].
+
+## Example usage
+
+```bash
+go build
+
+./goci -p <path-to-a-go-project>
+```

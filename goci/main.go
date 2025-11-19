@@ -26,10 +26,10 @@ func main() {
 
 func run(project string, out io.Writer) error {
 	if project == "" {
-		return fmt.Errorf("Project directory is required: %w", ErrValidation)
+		return fmt.Errorf("project directory is required: %w", ErrValidation)
 	}
 
-	pipeline := make([]executer, 4)
+	pipeline := make([]executer, 5)
 	pipeline[0] = newStep(
 		"go build",
 		"go",
@@ -38,20 +38,27 @@ func run(project string, out io.Writer) error {
 		[]string{"build", ".", "errors"},
 	)
 	pipeline[1] = newStep(
+		"golangci-lint run",
+		"golangci-lint",
+		"Golangci-lint: SUCCESS",
+		project,
+		[]string{"run"},
+	)
+	pipeline[2] = newStep(
 		"go test",
 		"go",
 		"Go Test: SUCCESS",
 		project,
 		[]string{"test", "-v"},
 	)
-	pipeline[2] = newExceptionStep(
+	pipeline[3] = newExceptionStep(
 		"go fmt",
 		"gofmt",
 		"Gofmt: SUCCESS",
 		project,
 		[]string{"-l", "."},
 	)
-	pipeline[3] = newTimeoutStep(
+	pipeline[4] = newTimeoutStep(
 		"git push",
 		"git",
 		"Git Push: SUCCESS",

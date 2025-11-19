@@ -27,7 +27,7 @@ func TestRun(t *testing.T) {
 		{
 			name:        "success",
 			project:     "./testdata/tool",
-			out:         "Go Build: SUCCESS\nGo Test: SUCCESS\nGofmt: SUCCESS\nGit Push: SUCCESS\n",
+			out:         "Go Build: SUCCESS\nGolangci-lint: SUCCESS\nGo Test: SUCCESS\nGofmt: SUCCESS\nGit Push: SUCCESS\n",
 			expectedErr: nil,
 			setupGit:    true,
 			mockCmd:     nil,
@@ -35,7 +35,7 @@ func TestRun(t *testing.T) {
 		{
 			name:        "successMock",
 			project:     "./testdata/tool",
-			out:         "Go Build: SUCCESS\nGo Test: SUCCESS\nGofmt: SUCCESS\nGit Push: SUCCESS\n",
+			out:         "Go Build: SUCCESS\nGolangci-lint: SUCCESS\nGo Test: SUCCESS\nGofmt: SUCCESS\nGit Push: SUCCESS\n",
 			expectedErr: nil,
 			setupGit:    false,
 			mockCmd:     mockCmdContext,
@@ -140,7 +140,7 @@ func TestRunKill(t *testing.T) {
 		}()
 		go func() {
 			time.Sleep(2 * time.Second)
-			syscall.Kill(syscall.Getpid(), testCase.signal)
+			_ = syscall.Kill(syscall.Getpid(), testCase.signal)
 		}()
 
 		select {
@@ -177,7 +177,7 @@ func TestHelperProcess(t *testing.T) {
 	}
 
 	if os.Args[2] == "git" {
-		fmt.Fprintln(os.Stdout, "Everything up-to-date")
+		_, _ = fmt.Fprintln(os.Stdout, "Everything up-to-date")
 		os.Exit(0)
 	}
 
@@ -236,8 +236,8 @@ func setupGit(t *testing.T, project string) func() {
 	}
 
 	return func() {
-		os.RemoveAll(tempDir)
-		os.RemoveAll(filepath.Join(projectPath, ".git"))
+		_ = os.RemoveAll(tempDir)
+		_ = os.RemoveAll(filepath.Join(projectPath, ".git"))
 	}
 }
 

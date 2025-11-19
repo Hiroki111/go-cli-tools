@@ -24,10 +24,11 @@ func (s step) execute() (string, error) {
 	cmd := exec.Command(s.exe, s.args...)
 	cmd.Dir = s.project
 
-	if err := cmd.Run(); err != nil {
+	output, err := cmd.CombinedOutput()
+	if err != nil {
 		return "", &stepErr{
 			step:    s.name,
-			message: "failed to execute",
+			message: string(output),
 			cause:   err,
 		}
 	}
