@@ -1,0 +1,45 @@
+[
+  {
+    "type": "step",
+    "name": "go build",
+    "exe": "go",
+    "args": ["build", ".", "errors"],
+    "message": "Go Build: SUCCESS"
+  },
+  {
+    "type": "step",
+    "name": "golangci-lint run",
+    "exe": "golangci-lint",
+    "args": ["run"],
+    "message": "Golangci-lint: SUCCESS"
+  },
+  {
+    "type": "step",
+    "name": "gocyclo",
+    "exe": "gocyclo",
+    "args": ["-over", "20", "."],
+    "message": "Gocyclo: SUCCESS"
+  },
+  {
+    "type": "step",
+    "name": "go test",
+    "exe": "go",
+    "args": ["test", "-v"],
+    "message": "Go Test: SUCCESS"
+  },
+  {
+    "type": "exception",
+    "name": "go fmt",
+    "exe": "gofmt",
+    "args": ["-l", "."],
+    "message": "Gofmt: SUCCESS"
+  },
+  {
+    "type": "timeout",
+    "name": "git push",
+    "exe": "git",
+    "args": ["push", "origin", "{{BRANCH}}"],
+    "message": "Git Push: SUCCESS",
+    "timeout_sec": 10
+  }
+]

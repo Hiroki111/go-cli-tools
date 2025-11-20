@@ -1,12 +1,13 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
 	"os"
 	"os/signal"
-	"strconv"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -34,51 +35,10 @@ func run(project string, branch string, out io.Writer) error {
 		return fmt.Errorf("branch name is required: %w", ErrValidation)
 	}
 
-	gocycloUpperLimit := 20
-	pipeline := make([]executer, 6)
-	pipeline[0] = newStep(
-		"go build",
-		"go",
-		"Go Build: SUCCESS",
-		project,
-		[]string{"build", ".", "errors"},
-	)
-	pipeline[1] = newStep(
-		"golangci-lint run",
-		"golangci-lint",
-		"Golangci-lint: SUCCESS",
-		project,
-		[]string{"run"},
-	)
-	pipeline[2] = newStep(
-		fmt.Sprintf("gocyclo -over %d", gocycloUpperLimit),
-		"gocyclo",
-		"Gocyclo: SUCCESS",
-		project,
-		[]string{"-over", strconv.Itoa(gocycloUpperLimit), "."},
-	)
-	pipeline[3] = newStep(
-		"go test",
-		"go",
-		"Go Test: SUCCESS",
-		project,
-		[]string{"test", "-v"},
-	)
-	pipeline[4] = newExceptionStep(
-		"go fmt",
-		"gofmt",
-		"Gofmt: SUCCESS",
-		project,
-		[]string{"-l", "."},
-	)
-	pipeline[5] = newTimeoutStep(
-		"git push",
-		"git",
-		"Git Push: SUCCESS",
-		project,
-		[]string{"push", "origin", branch},
-		10*time.Second,
-	)
+	pipeline, err := loadPipeline("steps.json", project, branch)
+	if err != nil {
+		return err
+	}
 	signalCh := make(chan os.Signal, 1)
 	errCh := make(chan error)
 	doneCh := make(chan struct{})
@@ -113,4 +73,49 @@ func run(project string, branch string, out io.Writer) error {
 			return nil
 		}
 	}
+}
+
+func loadPipeline(configPath, project, branch string) ([]executer, error) {
+	data, err := os.ReadFile(configPath)
+	if err != nil {
+		return nil, err
+	}
+
+	var configs []StepConfig
+	if err := json.Unmarshal(data, &configs); err != nil {
+		return nil, err
+	}
+
+	var pipeline []executer
+
+	for _, cfg := range configs {
+
+		// Replace {{BRANCH}} inside args
+		for i, a := range cfg.Args {
+			cfg.Args[i] = strings.ReplaceAll(a, "{{BRANCH}}", branch)
+		}
+
+		switch cfg.Type {
+		case "step":
+			pipeline = append(pipeline,
+				newStep(cfg.Name, cfg.Exe, cfg.Message, project, cfg.Args),
+			)
+
+		case "exception":
+			pipeline = append(pipeline,
+				newExceptionStep(cfg.Name, cfg.Exe, cfg.Message, project, cfg.Args),
+			)
+
+		case "timeout":
+			timeout := time.Duration(cfg.TimeoutSec) * time.Second
+			pipeline = append(pipeline,
+				newTimeoutStep(cfg.Name, cfg.Exe, cfg.Message, project, cfg.Args, timeout),
+			)
+
+		default:
+			return nil, fmt.Errorf("unknown step type: %s", cfg.Type)
+		}
+	}
+
+	return pipeline, nil
 }
