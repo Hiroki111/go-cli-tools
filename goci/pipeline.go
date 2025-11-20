@@ -8,8 +8,10 @@ import (
 	"time"
 )
 
-func loadPipeline(configPath, project, branch string) ([]executer, error) {
-	data, err := os.ReadFile(configPath)
+var stepsConfigPath = "steps.json"
+
+func loadPipeline(project, branch string) ([]executer, error) {
+	data, err := os.ReadFile(stepsConfigPath)
 	if err != nil {
 		return nil, err
 	}

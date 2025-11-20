@@ -16,6 +16,8 @@ import (
 )
 
 func TestRun(t *testing.T) {
+	stepsConfigPath = "./testdata/test_steps.json"
+
 	var testCases = []struct {
 		name        string
 		project     string

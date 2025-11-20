@@ -32,7 +32,7 @@ func run(project string, branch string, out io.Writer) error {
 		return fmt.Errorf("branch name is required: %w", ErrValidation)
 	}
 
-	pipeline, err := loadPipeline("steps.json", project, branch)
+	pipeline, err := loadPipeline(project, branch)
 	if err != nil {
 		return err
 	}
