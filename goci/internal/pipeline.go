@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-var StepsConfigPath = "../steps.json"
+var StepsConfigPath = "./steps.json"
 
 type Executer interface {
 	Execute() (string, error)
