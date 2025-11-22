@@ -3,15 +3,13 @@ package main
 import (
 	"flag"
 	"fmt"
+	"goci/internal"
+	"goci/internal/errors"
 	"io"
 	"os"
 	"os/signal"
 	"syscall"
 )
-
-type executer interface {
-	execute() (string, error)
-}
 
 func main() {
 	project := flag.String("p", "", "Project directory")
@@ -26,13 +24,13 @@ func main() {
 
 func run(project string, branch string, out io.Writer) error {
 	if project == "" {
-		return fmt.Errorf("project directory is required: %w", ErrValidation)
+		return fmt.Errorf("project directory is required: %w", errors.ErrValidation)
 	}
 	if branch == "" {
-		return fmt.Errorf("branch name is required: %w", ErrValidation)
+		return fmt.Errorf("branch name is required: %w", errors.ErrValidation)
 	}
 
-	pipeline, err := loadPipeline(project, branch)
+	pipeline, err := internal.LoadPipeline(project, branch)
 	if err != nil {
 		return err
 	}
@@ -44,7 +42,7 @@ func run(project string, branch string, out io.Writer) error {
 
 	go func() {
 		for _, s := range pipeline {
-			message, err := s.execute()
+			message, err := s.Execute()
 			if err != nil {
 				errCh <- err
 				return
@@ -63,7 +61,7 @@ func run(project string, branch string, out io.Writer) error {
 		select {
 		case receivedSignal := <-signalCh:
 			signal.Stop(signalCh)
-			return fmt.Errorf("%s: Exiting: %w", receivedSignal, ErrSignal)
+			return fmt.Errorf("%s: Exiting: %w", receivedSignal, errors.ErrSignal)
 		case err := <-errCh:
 			return err
 		case <-doneCh:

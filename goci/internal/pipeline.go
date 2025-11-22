@@ -1,17 +1,23 @@
-package main
+package internal
 
 import (
 	"encoding/json"
 	"fmt"
+	"goci/internal/steps"
+
 	"os"
 	"strings"
 	"time"
 )
 
-var stepsConfigPath = "steps.json"
+var StepsConfigPath = "../steps.json"
 
-func loadPipeline(project, branch string) ([]executer, error) {
-	data, err := os.ReadFile(stepsConfigPath)
+type Executer interface {
+	Execute() (string, error)
+}
+
+func LoadPipeline(project, branch string) ([]Executer, error) {
+	data, err := os.ReadFile(StepsConfigPath)
 	if err != nil {
 		return nil, err
 	}
@@ -21,7 +27,7 @@ func loadPipeline(project, branch string) ([]executer, error) {
 		return nil, err
 	}
 
-	var pipeline []executer
+	var pipeline []Executer
 
 	for _, cfg := range configs {
 
@@ -33,18 +39,18 @@ func loadPipeline(project, branch string) ([]executer, error) {
 		switch cfg.Type {
 		case "step":
 			pipeline = append(pipeline,
-				newStep(cfg.Name, cfg.Exe, cfg.Message, project, cfg.Args),
+				steps.NewStep(cfg.Name, cfg.Exe, cfg.Message, project, cfg.Args),
 			)
 
 		case "exception":
 			pipeline = append(pipeline,
-				newExceptionStep(cfg.Name, cfg.Exe, cfg.Message, project, cfg.Args),
+				steps.NewExceptionStep(cfg.Name, cfg.Exe, cfg.Message, project, cfg.Args),
 			)
 
 		case "timeout":
 			timeout := time.Duration(cfg.TimeoutSec) * time.Second
 			pipeline = append(pipeline,
-				newTimeoutStep(cfg.Name, cfg.Exe, cfg.Message, project, cfg.Args, timeout),
+				steps.NewTimeoutStep(cfg.Name, cfg.Exe, cfg.Message, project, cfg.Args, timeout),
 			)
 
 		default:

@@ -5,6 +5,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"goci/internal"
+	internalError "goci/internal/errors"
+	"goci/internal/steps"
 	"io"
 	"os"
 	"os/exec"
@@ -16,7 +19,7 @@ import (
 )
 
 func TestRun(t *testing.T) {
-	stepsConfigPath = "./testdata/test_steps.json"
+	internal.StepsConfigPath = "./testdata/test_steps.json"
 
 	var testCases = []struct {
 		name        string
@@ -46,7 +49,7 @@ func TestRun(t *testing.T) {
 			name:        "fail",
 			project:     "./testdata/toolErr",
 			out:         "",
-			expectedErr: &stepErr{step: "go build"},
+			expectedErr: &internalError.StepErr{Step: "go build"},
 			setupGit:    false,
 			mockCmd:     nil,
 		},
@@ -54,7 +57,7 @@ func TestRun(t *testing.T) {
 			name:        "failFormat",
 			project:     "./testdata/toolFmtErr",
 			out:         "",
-			expectedErr: &stepErr{step: "go fmt"},
+			expectedErr: &internalError.StepErr{Step: "go fmt"},
 			setupGit:    false,
 			mockCmd:     nil,
 		},
@@ -81,7 +84,7 @@ func TestRun(t *testing.T) {
 			}
 
 			if testCase.mockCmd != nil {
-				command = testCase.mockCmd
+				steps.Command = testCase.mockCmd
 			}
 
 			var out bytes.Buffer
@@ -118,15 +121,15 @@ func TestRunKill(t *testing.T) {
 		signal      syscall.Signal
 		expectedErr error
 	}{
-		{"SIGINT", "./testdata/tool", syscall.SIGINT, ErrSignal},
-		{"SIGTERM", "./testdata/tool", syscall.SIGTERM, ErrSignal},
+		{"SIGINT", "./testdata/tool", syscall.SIGINT, internalError.ErrSignal},
+		{"SIGTERM", "./testdata/tool", syscall.SIGTERM, internalError.ErrSignal},
 		{"SIGQUIT", "./testdata/tool", syscall.SIGQUIT, nil},
 	}
 	var branch = "master"
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			command = mockCmdTimeout
+			steps.Command = mockCmdTimeout
 		})
 
 		errCh := make(chan error)

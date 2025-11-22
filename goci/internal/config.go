@@ -1,4 +1,4 @@
-package main
+package internal
 
 type StepConfig struct {
 	Type       string   `json:"type"` // "step", "exception", "timeout"
