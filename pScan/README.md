@@ -12,9 +12,7 @@ To get started, install Cobra (if you haven't yet).
 cobra --help
 ```
 
-Then, run the following. This is necessary to ensure that the correct directory is included in the $PATH so you can execute cobra directly
+Then, run the following to ensure that the correct directory is included in the $PATH so you can execute cobra directly.
 ```bash
 export PATH=$(go env GOPATH)/bin:$PATH
 ```
-
-cobra​​ ​​init​​ ​​--pkg-name​​ ​​pragprog.com/rggo/cobra/pScan
