@@ -10,7 +10,16 @@ import (
 	"time"
 )
 
-var StepsConfigPath = "./steps.json"
+type stepConfig struct {
+	Type       string   `json:"type"` // "step", "exception", "timeout"
+	Name       string   `json:"name"`
+	Exe        string   `json:"exe"`
+	Args       []string `json:"args"`
+	Message    string   `json:"message"`
+	TimeoutSec int      `json:"timeout_sec"`
+}
+
+var StepsConfigPath = "./internal/steps.json"
 
 type Executer interface {
 	Execute() (string, error)
@@ -22,7 +31,7 @@ func LoadPipeline(project, branch string) ([]Executer, error) {
 		return nil, err
 	}
 
-	var configs []StepConfig
+	var configs []stepConfig
 	if err := json.Unmarshal(data, &configs); err != nil {
 		return nil, err
 	}
