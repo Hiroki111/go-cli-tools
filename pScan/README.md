@@ -16,3 +16,12 @@ Then, run the following to ensure that the correct directory is included in the 
 ```bash
 export PATH=$(go env GOPATH)/bin:$PATH
 ```
+
+## Example usage
+
+```bash
+go build
+
+# Add localhost to the host list to scan to pScan.hosts
+./pScan hosts add localhost
+```
