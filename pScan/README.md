@@ -24,4 +24,7 @@ go build
 
 # Add localhost to the host list to scan to pScan.hosts
 ./pScan hosts add localhost
+
+# Scan the hosts in the list with ports that you expect to be open
+./pScan scan --ports 22,80,443,6060
 ```
