@@ -1,5 +1,7 @@
 # pScan
 
+THIS PROJECT IS INCOMPLETE. Continue at page 266/464 (Generating Command Completion and Documentation)
+
 A CLI tool that uses subcommands, similar to Git or Kubernetes. 
 This tool executes a TCP port scan on a list of hosts similarly to the Nmap command. It allows you to add, list, and delete hosts from the list using the subcommand hosts.
 It executes the scan on selected ports using the subcommand scan. Users can specify the ports using a command-line flag.
@@ -27,4 +29,7 @@ go build
 
 # Scan the hosts in the list with ports that you expect to be open
 ./pScan scan --ports 22,80,443,6060
+
+# Set hosts in newFile.hosts. PSCAN_HOSTS_FILE is an env variable, and it can be accessed via Viper.
+PSCAN_HOSTS_FILE=newFile.hosts ./pScan hosts lis
 ```
