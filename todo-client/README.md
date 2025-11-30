@@ -15,4 +15,9 @@ go build
 ./todo-client complete 3
 
 ./todo-client del 2
+
+# Testing
+go test -v ./cmd/
+
+go test -v ./cmd/ -tags integration
 ```
