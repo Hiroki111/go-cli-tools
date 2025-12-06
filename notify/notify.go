@@ -1,5 +1,12 @@
 package notify
 
+import (
+	"runtime"
+
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
+)
+
 const (
 	SeverityLow = iota
 	SeverityNormal
@@ -20,4 +27,34 @@ func New(title, message string, severity Severity) *Notify {
 		message:  message,
 		severity: severity,
 	}
+}
+
+func (s Severity) String() string {
+	sev := "low"
+
+	switch s {
+	case SeverityLow:
+		sev = "low"
+	case SeverityNormal:
+		sev = "normal"
+	case SeverityUrgent:
+		sev = "critical"
+	}
+
+	if runtime.GOOS == "darwin" {
+		sev = cases.Title(language.English).String(sev)
+	}
+
+	if runtime.GOOS == "windows" {
+		switch s {
+		case SeverityLow:
+			sev = "Info"
+		case SeverityNormal:
+			sev = "Warning"
+		case SeverityUrgent:
+			sev = "Error"
+		}
+	}
+
+	return sev
 }
